@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나는 어떤 유형의 팀장일까?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --vision: #6C5CE7;
+    --manage: #0984E3;
+    --coach: #00B894;
+    --delegate: #E17055;
+    --bg: #F8F9FE;
+    --card: #FFFFFF;
+    --text: #2D3436;
+    --sub: #636E72;
+    --border: #E8ECF1;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #6C5CE7 0%, #0984E3 50%, #00B894 100%);
+    padding: 60px 24px 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: var(--bg);
+    border-radius: 40px 40px 0 0;
+  }
+  .hero-emoji { font-size: 56px; margin-bottom: 16px; display: block; }
+  .hero h1 {
+    color: #fff;
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .hero p {
+    color: rgba(255,255,255,0.85);
+    font-size: 16px;
+    font-weight: 400;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  /* Container */
+  .container {
+    max-width: 640px;
+    margin: -20px auto 40px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sub);
+  }
+  .progress-top .current { color: var(--vision); font-size: 15px; }
+  .progress-bar {
+    height: 8px;
+    background: #EDF0F5;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6C5CE7, #0984E3);
+    border-radius: 4px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Question Card */
+  .question-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 32px 28px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    animation: slideUp 0.4s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .q-number {
+    display: inline-block;
+    background: linear-gradient(135deg, #6C5CE7, #0984E3);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  .q-text {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    color: var(--text);
+    word-break: keep-all;
+  }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    background: #FAFBFD;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: left;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.6;
+    word-break: keep-all;
+  }
+  .option-btn:hover {
+    border-color: #B8B5F6;
+    background: #F3F2FF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(108,92,231,0.1);
+  }
+  .option-btn.selected {
+    border-color: var(--vision);
+    background: #F0EEFF;
+    box-shadow: 0 4px 16px rgba(108,92,231,0.15);
+  }
+  .option-label {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #EDF0F5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sub);
+    transition: all 0.25s;
+  }
+  .option-btn.selected .option-label {
+    background: var(--vision);
+    color: #fff;
+  }
+
+  /* Nav */
+  .nav-area {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 12px;
+  }
+  .btn {
+    flex: 1;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-prev {
+    background: #EDF0F5;
+    color: var(--sub);
+    max-width: 120px;
+  }
+  .btn-prev:hover:not(:disabled) { background: #DEE2E8; }
+  .btn-next {
+    background: linear-gradient(135deg, #6C5CE7, #0984E3);
+    color: #fff;
+  }
+  .btn-next:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(108,92,231,0.35);
+  }
+
+  /* Intro */
+  .intro-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 40px 28px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    text-align: center;
+  }
+  .intro-card h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+  .intro-card p {
+    color: var(--sub);
+    font-size: 15px;
+    margin-bottom: 8px;
+    line-height: 1.7;
+  }
+  .intro-types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 28px 0;
+    text-align: left;
+  }
+  .intro-type {
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .intro-type.t-vision { background: #F0EEFF; color: var(--vision); }
+  .intro-type.t-manage { background: #E8F4FD; color: var(--manage); }
+  .intro-type.t-coach { background: #E6F9F3; color: var(--coach); }
+  .intro-type.t-delegate { background: #FDF0EC; color: var(--delegate); }
+  .intro-type span { display: block; font-size: 12px; font-weight: 400; margin-top: 2px; opacity: 0.8; }
+  .btn-start {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6C5CE7, #0984E3);
+    color: #fff;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(108,92,231,0.35);
+  }
+
+  /* Result */
+  .result-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 36px 28px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    animation: slideUp 0.5s ease;
+  }
+  .result-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 16px;
+  }
+  .result-title {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .result-subtitle {
+    font-size: 15px;
+    color: var(--sub);
+    margin-bottom: 28px;
+    line-height: 1.7;
+  }
+  .result-section {
+    margin-bottom: 24px;
+  }
+  .result-section h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .result-section p, .result-section li {
+    font-size: 14px;
+    color: #4A5568;
+    line-height: 1.8;
+  }
+  .result-section ul {
+    list-style: none;
+    padding: 0;
+  }
+  .result-section li {
+    padding: 6px 0;
+    padding-left: 20px;
+    position: relative;
+  }
+  .result-section li::before {
+    content: '•';
+    position: absolute;
+    left: 4px;
+    font-weight: 700;
+  }
+  .tag-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Score bars */
+  .score-section { margin: 28px 0; }
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .score-label {
+    flex-shrink: 0;
+    width: 80px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+  }
+  .score-bar-bg {
+    flex: 1;
+    height: 10px;
+    background: #EDF0F5;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .score-pct {
+    flex-shrink: 0;
+    width: 42px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  /* Tip box */
+  .tip-box {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-top: 20px;
+  }
+  .tip-box h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #B45309;
+    margin-bottom: 6px;
+  }
+  .tip-box p {
+    font-size: 13px;
+    color: #92400E;
+    line-height: 1.7;
+  }
+
+  /* Retry */
+  .btn-retry {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--sub);
+    cursor: pointer;
+    margin-top: 16px;
+    transition: all 0.25s;
+  }
+  .btn-retry:hover {
+    border-color: var(--vision);
+    color: var(--vision);
+    background: #F8F7FF;
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 480px) {
+    .hero { padding: 48px 20px 64px; }
+    .hero h1 { font-size: 26px; }
+    .container { padding: 0 16px; }
+    .question-card { padding: 24px 20px; }
+    .q-text { font-size: 17px; }
+    .intro-types { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="hero-emoji">👔</span>
+  <h1>나는 어떤 유형의 팀장일까?</h1>
+  <p>12개 질문으로 알아보는 나의 리더십 스타일</p>
+</div>
+
+<div class="container">
+  <!-- INTRO -->
+  <div id="intro">
+    <div class="intro-card">
+      <h2>리더십 유형 자가진단</h2>
+      <p>평소 팀을 이끄는 방식에 대해 솔직하게 답해주세요.</p>
+      <p>정답은 없습니다. 가장 자연스러운 선택이 가장 정확합니다.</p>
+      <div class="intro-types">
+        <div class="intro-type t-vision">🔭 비전형<span>큰 그림과 영감</span></div>
+        <div class="intro-type t-manage">📋 관리형<span>체계와 프로세스</span></div>
+        <div class="intro-type t-coach">🌱 코칭형<span>성장과 지원</span></div>
+        <div class="intro-type t-delegate">🤝 위임형<span>자율과 책임</span></div>
+      </div>
+      <button class="btn-start" onclick="startQuiz()">테스트 시작하기</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz" class="hidden">
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span class="current" id="progressText">1 / 12</span>
+        <span>진행률</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:8.3%"></div>
+      </div>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="q-number" id="qNumber">Q1</div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="optionsArea"></div>
+    </div>
+
+    <div class="nav-area">
+      <button class="btn btn-prev" id="btnPrev" onclick="prevQ()" disabled>이전</button>
+      <button class="btn btn-next" id="btnNext" onclick="nextQ()" disabled>다음</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result" class="hidden"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    text: "새로운 프로젝트를 시작할 때, 가장 먼저 하는 일은?",
+    options: [
+      { text: "\"이 프로젝트가 우리에게 어떤 의미인지\" 팀에게 비전을 공유한다", type: "vision" },
+      { text: "일정, 역할 분담, 마일스톤부터 세밀하게 계획표를 짠다", type: "manage" },
+      { text: "팀원 개개인의 강점과 관심사를 파악해 역할을 매칭한다", type: "coach" },
+      { text: "큰 방향만 정하고, 구체적 실행은 팀원들에게 맡긴다", type: "delegate" }
+    ]
+  },
+  {
+    text: "팀원이 업무 중 실수를 했을 때, 당신의 첫 반응은?",
+    options: [
+      { text: "\"이 실수에서 우리가 배울 수 있는 게 뭘까?\"라며 의미를 찾는다", type: "vision" },
+      { text: "원인을 분석하고 재발 방지 프로세스를 만든다", type: "manage" },
+      { text: "1:1로 만나 어떤 부분이 어려웠는지 듣고 함께 해결책을 찾는다", type: "coach" },
+      { text: "본인이 스스로 해결할 기회를 주고, 필요할 때만 도움을 제안한다", type: "delegate" }
+    ]
+  },
+  {
+    text: "팀 회의에서 당신이 가장 자주 하는 말은?",
+    options: [
+      { text: "\"우리가 궁극적으로 만들고 싶은 모습은 이겁니다\"", type: "vision" },
+      { text: "\"이번 주 목표 대비 진행률을 체크합시다\"", type: "manage" },
+      { text: "\"각자 요즘 어떤 점이 가장 어렵나요?\"", type: "coach" },
+      { text: "\"각자 진행 상황을 자유롭게 공유해 주세요\"", type: "delegate" }
+    ]
+  },
+  {
+    text: "팀의 성과가 부진할 때 당신의 대처법은?",
+    options: [
+      { text: "다시 한번 목표와 비전을 상기시키며 동기를 부여한다", type: "vision" },
+      { text: "데이터를 분석해 병목 지점을 찾고 프로세스를 개선한다", type: "manage" },
+      { text: "팀원별 애로사항을 파악해 개인별 지원 방안을 마련한다", type: "coach" },
+      { text: "팀원들이 자체적으로 문제를 진단하고 해결책을 제시하게 한다", type: "delegate" }
+    ]
+  },
+  {
+    text: "새로 합류한 신입 팀원에게 당신이 가장 먼저 전하는 것은?",
+    options: [
+      { text: "우리 팀이 존재하는 이유와 앞으로의 방향성", type: "vision" },
+      { text: "업무 매뉴얼, 보고 체계, 주요 프로세스", type: "manage" },
+      { text: "\"모르는 건 언제든 물어보세요\"라며 멘토를 배정해준다", type: "coach" },
+      { text: "\"일단 자유롭게 관찰하고, 본인만의 방식을 찾아보세요\"", type: "delegate" }
+    ]
+  },
+  {
+    text: "팀원이 당신에게 이직 고민을 털어놓았다. 당신의 반응은?",
+    options: [
+      { text: "\"우리 팀에서 당신이 이룰 수 있는 더 큰 그림\"을 이야기한다", type: "vision" },
+      { text: "현재 대우와 커리어 패스를 정리해서 객관적으로 비교해준다", type: "manage" },
+      { text: "진짜 이직 사유가 뭔지 깊이 대화하며 고민을 함께 나눈다", type: "coach" },
+      { text: "\"최종 결정은 본인 몫\"이라며 존중하되 도움이 필요하면 말하라 한다", type: "delegate" }
+    ]
+  },
+  {
+    text: "중요한 의사결정을 앞두고 있다. 당신의 결정 방식은?",
+    options: [
+      { text: "장기적 비전에 부합하는지를 기준으로 직관적으로 판단한다", type: "vision" },
+      { text: "데이터와 사례를 수집해 비교 분석 후 결정한다", type: "manage" },
+      { text: "팀원들의 의견을 두루 들은 뒤 합의를 이끌어낸다", type: "coach" },
+      { text: "해당 업무의 담당자에게 결정 권한을 위임한다", type: "delegate" }
+    ]
+  },
+  {
+    text: "가장 이상적인 팀 분위기는?",
+    options: [
+      { text: "\"우리는 특별한 걸 만들고 있다\"는 열정과 에너지가 넘치는 팀", type: "vision" },
+      { text: "각자 역할이 명확하고, 약속된 시간에 정확히 산출물이 나오는 팀", type: "manage" },
+      { text: "서로의 성장을 응원하고, 실패해도 안전하다고 느끼는 팀", type: "coach" },
+      { text: "각자 알아서 잘 하고, 필요할 때만 모여서 조율하는 팀", type: "delegate" }
+    ]
+  },
+  {
+    text: "팀원 두 명이 의견 충돌을 빚고 있다. 당신의 대응은?",
+    options: [
+      { text: "\"우리의 공동 목표\"를 다시 상기시키며 큰 그림에서 조율한다", type: "vision" },
+      { text: "각자의 주장을 문서화하고 기준에 따라 합리적으로 조정한다", type: "manage" },
+      { text: "양쪽의 감정과 입장을 모두 듣고 서로 이해할 수 있도록 중재한다", type: "coach" },
+      { text: "당사자끼리 먼저 해결해보도록 하고, 안 되면 그때 개입한다", type: "delegate" }
+    ]
+  },
+  {
+    text: "팀의 업무 보고를 받을 때 가장 중요하게 보는 것은?",
+    options: [
+      { text: "이 일이 전체 전략에 얼마나 기여하는가", type: "vision" },
+      { text: "계획 대비 진척률과 수치 데이터", type: "manage" },
+      { text: "팀원이 과정에서 겪은 어려움과 성장 포인트", type: "coach" },
+      { text: "팀원 스스로 판단하고 해결한 부분", type: "delegate" }
+    ]
+  },
+  {
+    text: "연말 팀 평가에서 가장 높게 쳐주는 것은?",
+    options: [
+      { text: "도전적인 목표를 세우고 그 방향으로 팀을 이끈 기여도", type: "vision" },
+      { text: "맡은 KPI를 정확히 달성하고 실수 없이 완수한 안정성", type: "manage" },
+      { text: "본인 역량의 성장폭과 동료에게 끼친 긍정적 영향", type: "coach" },
+      { text: "자율적으로 판단하고 주도적으로 업무를 완수한 주인의식", type: "delegate" }
+    ]
+  },
+  {
+    text: "당신이 팀장으로서 가장 보람을 느끼는 순간은?",
+    options: [
+      { text: "팀이 불가능해 보이던 목표를 달성했을 때", type: "vision" },
+      { text: "완벽하게 돌아가는 시스템을 구축했을 때", type: "manage" },
+      { text: "팀원이 \"덕분에 성장했다\"고 말해줄 때", type: "coach" },
+      { text: "내가 없어도 팀이 잘 돌아가는 걸 볼 때", type: "delegate" }
+    ]
+  }
+];
+
+const typeData = {
+  vision: {
+    emoji: "🔭",
+    name: "비전형 팀장",
+    color: "#6C5CE7",
+    colorLight: "#F0EEFF",
+    tagline: "큰 그림을 보여주고 영감으로 이끄는 리더",
+    desc: "당신은 팀에게 \"왜 이 일을 하는지\"를 가장 잘 설명하는 리더입니다. 목표 너머의 의미를 전달하고, 팀원들이 열정을 갖고 일할 수 있도록 영감을 불어넣습니다.",
+    strengths: [
+      "방향성이 명확해 팀이 흔들리지 않음",
+      "동기부여 능력이 탁월함",
+      "변화와 혁신을 두려워하지 않음",
+      "팀원들에게 일의 의미를 부여하는 능력"
+    ],
+    cautions: [
+      "구체적 실행 계획이 부족할 수 있음",
+      "현실적 제약을 간과할 위험",
+      "세부 관리를 소홀히 할 수 있음"
+    ],
+    tip: "비전만으로는 결과가 나오지 않습니다. 관리형의 체계적 실행력을 보완하면, 당신의 비전은 현실이 됩니다. 주 1회 실행 점검 미팅을 도입해 보세요.",
+    tags: ["전략적 사고", "동기부여", "혁신 추구", "큰 그림"]
+  },
+  manage: {
+    emoji: "📋",
+    name: "관리형 팀장",
+    color: "#0984E3",
+    colorLight: "#E8F4FD",
+    tagline: "명확한 지시와 체계적 프로세스의 달인",
+    desc: "당신은 팀의 생산성과 효율을 극대화하는 리더입니다. 명확한 기준과 체계적 프로세스로 팀원들이 안정적으로 성과를 낼 수 있는 환경을 만듭니다.",
+    strengths: [
+      "생산성이 높고 실수와 오류가 적음",
+      "프로세스가 체계적이라 예측 가능한 결과",
+      "명확한 역할 분담과 책임 소재",
+      "데이터 기반의 합리적 의사결정"
+    ],
+    cautions: [
+      "팀원의 창의성과 자율성을 제한할 수 있음",
+      "과도한 관리가 마이크로매니징으로 느껴질 수 있음",
+      "변화에 대한 유연성이 부족할 수 있음"
+    ],
+    tip: "체계는 당신의 강점이지만, 가끔은 '관리하지 않는 시간'도 필요합니다. 팀원 스스로 시도하고 실패할 수 있는 안전지대를 만들어 주세요. 코칭형의 경청 능력을 배워보는 것도 좋습니다.",
+    tags: ["체계적", "효율 추구", "데이터 중심", "안정감"]
+  },
+  coach: {
+    emoji: "🌱",
+    name: "코칭형 팀장",
+    color: "#00B894",
+    colorLight: "#E6F9F3",
+    tagline: "팀원의 성장을 최우선으로 생각하는 리더",
+    desc: "당신은 팀원 한 명 한 명의 가능성을 발견하고 키워주는 리더입니다. 개인의 강점을 극대화하고, 심리적 안전감 속에서 팀 전체가 함께 성장하도록 이끕니다.",
+    strengths: [
+      "팀원의 역량이 빠르게 성장함",
+      "심리적 안전감이 높은 팀 문화",
+      "팀원 이직률이 낮고 충성도가 높음",
+      "장기적으로 자생하는 강한 팀 구축"
+    ],
+    cautions: [
+      "단기 성과가 지연될 수 있음",
+      "모든 팀원에게 동일한 관심을 쏟기 어려움",
+      "때로는 냉철한 의사결정이 필요한 순간에 망설일 수 있음"
+    ],
+    tip: "성장에는 시간이 필요하지만, 비즈니스는 기다려주지 않을 때가 있습니다. 관리형의 마감 관리 능력을 결합하면, 성장과 성과를 동시에 잡을 수 있습니다.",
+    tags: ["경청", "멘토링", "공감", "성장 지원"]
+  },
+  delegate: {
+    emoji: "🤝",
+    name: "위임형 팀장",
+    color: "#E17055",
+    colorLight: "#FDF0EC",
+    tagline: "팀원의 자율성과 책임감을 존중하는 리더",
+    desc: "당신은 팀원들을 프로페셔널로 존중하고, 스스로 판단하고 실행할 수 있는 환경을 만드는 리더입니다. 최소한의 개입으로 최대한의 자율성을 부여합니다.",
+    strengths: [
+      "팀원의 주인의식과 책임감이 매우 높음",
+      "자율적 문화로 창의적 해결책이 많이 나옴",
+      "팀장의 번아웃 리스크가 상대적으로 낮음",
+      "고성과 팀원이 선호하는 리더십 스타일"
+    ],
+    cautions: [
+      "모니터링 부족 시 방향성을 잃을 수 있음",
+      "신입이나 주니어에게는 방치로 느껴질 수 있음",
+      "팀 전체의 일관성 유지가 어려울 수 있음"
+    ],
+    tip: "자율은 신뢰가 전제되어야 합니다. 경험이 적은 팀원에게는 코칭형의 가이드를 제공하고, 주기적인 체크포인트를 두어 방향이 어긋나지 않도록 관리해 보세요.",
+    tags: ["자율성", "신뢰", "주인의식", "효율적 위임"]
+  }
+};
+
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+
+function startQuiz() {
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  document.getElementById('qNumber').textContent = `Q${current + 1}`;
+  document.getElementById('qText').textContent = q.text;
+  document.getElementById('progressText').textContent = `${current + 1} / ${questions.length}`;
+  document.getElementById('progressFill').style.width = `${((current + 1) / questions.length) * 100}%`;
+
+  const area = document.getElementById('optionsArea');
+  const labels = ['A', 'B', 'C', 'D'];
+  area.innerHTML = q.options.map((opt, i) => `
+    <button class="option-btn ${answers[current] === i ? 'selected' : ''}" onclick="selectOption(${i})">
+      <span class="option-label">${labels[i]}</span>
+      <span>${opt.text}</span>
+    </button>
+  `).join('');
+
+  document.getElementById('btnPrev').disabled = current === 0;
+  const btnNext = document.getElementById('btnNext');
+  btnNext.disabled = answers[current] === null;
+  btnNext.textContent = current === questions.length - 1 ? '결과 보기' : '다음';
+
+  // Re-trigger animation
+  const card = document.getElementById('questionCard');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'slideUp 0.4s ease';
+}
+
+function selectOption(idx) {
+  answers[current] = idx;
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === idx);
+  });
+  document.getElementById('btnNext').disabled = false;
+}
+
+function nextQ() {
+  if (current < questions.length - 1) {
+    current++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function prevQ() {
+  if (current > 0) {
+    current--;
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  const scores = { vision: 0, manage: 0, coach: 0, delegate: 0 };
+  answers.forEach((ans, i) => {
+    if (ans !== null) {
+      scores[questions[i].options[ans].type]++;
+    }
+  });
+
+  const total = questions.length;
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const topType = sorted[0][0];
+  const secondType = sorted[1][0];
+  const data = typeData[topType];
+  const secondData = typeData[secondType];
+
+  document.getElementById('quiz').classList.add('hidden');
+  const resultDiv = document.getElementById('result');
+  resultDiv.classList.remove('hidden');
+
+  resultDiv.innerHTML = `
+    <div class="result-card">
+      <div style="text-align:center; margin-bottom: 24px;">
+        <div style="font-size:56px; margin-bottom:12px;">${data.emoji}</div>
+        <span class="result-badge" style="background:${data.color}">${data.emoji} 당신의 유형</span>
+        <div class="result-title" style="color:${data.color}">${data.name}</div>
+        <div class="result-subtitle">${data.tagline}</div>
+      </div>
+
+      <div class="score-section">
+        ${sorted.map(([type, score]) => {
+          const d = typeData[type];
+          const pct = Math.round((score / total) * 100);
+          return `
+            <div class="score-row">
+              <span class="score-label" style="color:${d.color}">${d.emoji} ${d.name.replace(' 팀장','')}</span>
+              <div class="score-bar-bg">
+                <div class="score-bar-fill" style="background:${d.color}; width:${pct}%"></div>
+              </div>
+              <span class="score-pct" style="color:${d.color}">${pct}%</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div class="result-section">
+        <h3>📝 당신은 이런 리더입니다</h3>
+        <p>${data.desc}</p>
+      </div>
+
+      <div class="result-section">
+        <h3 style="color:${data.color}">💪 강점</h3>
+        <ul>
+          ${data.strengths.map(s => `<li style="color:#4A5568">${s}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="result-section">
+        <h3 style="color:#E17055">⚠️ 주의할 점</h3>
+        <ul>
+          ${data.cautions.map(c => `<li style="color:#4A5568">${c}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="tag-wrap">
+        ${data.tags.map(t => `<span class="tag" style="background:${data.colorLight}; color:${data.color}">#${t}</span>`).join('')}
+      </div>
+
+      <div class="tip-box">
+        <h4>💡 성장을 위한 한마디</h4>
+        <p>${data.tip}</p>
+      </div>
+
+      ${sorted[1][1] > 0 ? `
+      <div style="margin-top:24px; padding:18px 20px; background:${secondData.colorLight}; border-radius:14px;">
+        <p style="font-size:14px; font-weight:600; color:${secondData.color}; margin-bottom:4px;">${secondData.emoji} 2순위: ${secondData.name}</p>
+        <p style="font-size:13px; color:#4A5568; line-height:1.7;">${secondData.tagline} — 이 성향도 당신에게 강하게 나타납니다.</p>
+      </div>
+      ` : ''}
+
+      <button class="btn-retry" onclick="retry()">🔄 다시 테스트하기</button>
+    </div>
+  `;
+
+  // Animate score bars
+  setTimeout(() => {
+    document.querySelectorAll('.score-bar-fill').forEach(bar => {
+      bar.style.width = bar.style.width;
+    });
+  }, 100);
+}
+
+function retry() {
+  current = 0;
+  answers = new Array(questions.length).fill(null);
+  document.getElementById('result').classList.add('hidden');
+  document.getElementById('result').innerHTML = '';
+  document.getElementById('intro').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
