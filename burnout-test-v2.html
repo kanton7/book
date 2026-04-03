@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영상 디자이너 번아웃 자가진단</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: linear-gradient(135deg, #0a0a1a, #1a1035, #0d1f2d);
+    min-height: 100vh;
+    color: #e0e0e0;
+    overflow-x: hidden;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 40px 20px 60px; }
+  .header { text-align: center; margin-bottom: 48px; animation: fadeInDown 0.8s ease; }
+  .header .icon { font-size: 56px; margin-bottom: 16px; display: inline-block; animation: pulse 2.5s ease-in-out infinite; }
+  .header h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(90deg, #a855f7, #6366f1, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+  .header p { font-size: 0.95rem; color: #aaa; line-height: 1.7; }
+  .header .tag { display: inline-block; margin-top: 14px; padding: 6px 16px; font-size: 0.78rem; color: #a78bfa; background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.2); border-radius: 20px; letter-spacing: 0.3px; }
+  .progress-wrap { position: sticky; top: 0; z-index: 100; background: rgba(10,10,26,0.92); backdrop-filter: blur(12px); padding: 14px 0 10px; margin-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .progress-info { display: flex; justify-content: space-between; font-size: 0.82rem; color: #999; margin-bottom: 8px; }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .progress-bar .fill { height: 100%; width: 0%; background: linear-gradient(90deg, #a855f7, #6366f1, #38bdf8); border-radius: 3px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+  .question-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 36px 32px; margin-bottom: 20px; backdrop-filter: blur(10px); animation: fadeInUp 0.5s ease; transition: border-color 0.3s, background 0.3s, transform 0.3s, box-shadow 0.3s; }
+  .question-card:hover { border-color: rgba(168,85,247,0.2); }
+  .question-card.answered { border-color: rgba(168,85,247,0.35); background: rgba(168,85,247,0.04); }
+  .question-card.highlight { transform: scale(1.01); border-color: rgba(168,85,247,0.5); box-shadow: 0 0 30px rgba(168,85,247,0.1); }
+  .q-number { display: inline-block; font-size: 0.75rem; font-weight: 600; color: #a78bfa; background: rgba(167,139,250,0.1); padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; letter-spacing: 0.5px; }
+  .q-category { display: inline-block; font-size: 0.7rem; color: #888; background: rgba(255,255,255,0.05); padding: 3px 10px; border-radius: 20px; margin-left: 8px; }
+  .q-text { font-size: 1.08rem; font-weight: 500; line-height: 1.7; margin-bottom: 24px; color: #f0f0f0; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn { display: flex; align-items: center; gap: 14px; padding: 14px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; cursor: pointer; transition: all 0.25s; color: #ccc; font-size: 0.92rem; }
+  .option-btn:hover { background: rgba(168,85,247,0.08); border-color: rgba(168,85,247,0.3); color: #fff; transform: translateX(4px); }
+  .option-btn.selected { background: rgba(168,85,247,0.14); border-color: #a855f7; color: #c4b5fd; font-weight: 500; }
+  .option-btn .dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.25s; }
+  .option-btn.selected .dot { border-color: #a855f7; background: #a855f7; }
+  .option-btn.selected .dot::after { content: '✓'; font-size: 12px; color: #fff; font-weight: 700; }
+  .submit-wrap { text-align: center; margin-top: 40px; animation: fadeInUp 0.6s ease; }
+  .submit-btn { padding: 18px 56px; font-size: 1.1rem; font-weight: 600; color: #fff; background: linear-gradient(135deg, #a855f7, #6366f1); border: none; border-radius: 60px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 25px rgba(168,85,247,0.3); font-family: 'Noto Sans KR', sans-serif; }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 35px rgba(168,85,247,0.45); }
+  .submit-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
+  .submit-hint { margin-top: 12px; font-size: 0.82rem; color: #777; }
+  .result-section { display: none; animation: fadeInUp 0.8s ease; }
+  .result-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 48px 36px; text-align: center; backdrop-filter: blur(10px); }
+  .result-emoji { font-size: 72px; margin-bottom: 20px; display: inline-block; animation: bounceIn 0.6s ease; }
+  .result-level { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+  .result-score { font-size: 1rem; color: #aaa; margin-bottom: 28px; }
+  .score-bar-wrap { max-width: 400px; margin: 0 auto 32px; }
+  .score-bar-bg { height: 12px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 6px; transition: width 1.5s cubic-bezier(0.4,0,0.2,1); width: 0%; }
+  .score-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #777; margin-top: 6px; }
+  .result-desc { font-size: 0.95rem; color: #ccc; line-height: 1.85; text-align: left; margin-bottom: 32px; background: rgba(255,255,255,0.03); padding: 24px; border-radius: 16px; border-left: 3px solid; }
+  .tips-title { font-size: 1.05rem; font-weight: 600; color: #f0f0f0; margin-bottom: 16px; text-align: left; }
+  .tip-item { display: flex; gap: 12px; align-items: flex-start; text-align: left; padding: 14px 18px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 10px; font-size: 0.9rem; color: #bbb; line-height: 1.6; }
+  .tip-item .tip-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+  .retry-btn { margin-top: 36px; padding: 14px 44px; font-size: 0.95rem; font-weight: 500; color: #f0f0f0; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 60px; cursor: pointer; transition: all 0.3s; font-family: 'Noto Sans KR', sans-serif; }
+  .retry-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.4); }
+  .disclaimer { margin-top: 40px; padding: 18px 22px; background: rgba(168,85,247,0.05); border: 1px solid rgba(168,85,247,0.12); border-radius: 14px; font-size: 0.78rem; color: #999; line-height: 1.7; text-align: left; }
+  .category-breakdown { margin: 28px 0; text-align: left; }
+  .cat-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .cat-label { font-size: 0.85rem; color: #bbb; width: 110px; flex-shrink: 0; text-align: right; }
+  .cat-bar-bg { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .cat-val { font-size: 0.8rem; color: #999; width: 36px; text-align: right; }
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+  @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.95); } 100% { transform: scale(1); opacity: 1; } }
+  @media (max-width: 600px) { .container { padding: 24px 16px 40px; } .header h1 { font-size: 1.5rem; } .question-card { padding: 24px 20px; } .result-card { padding: 36px 20px; } .cat-label { width: 90px; font-size: 0.78rem; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="icon">🎬</div>
+    <h1>영상 디자이너 번아웃 자가진단</h1>
+    <p>최근 2주간의 상태를 떠올리며 솔직하게 답해주세요.<br>총 20문항, 약 3분 소요됩니다.</p>
+    <div class="tag">모션 그래픽 · 영상 편집 · VFX · 콘텐츠 크리에이터</div>
+  </div>
+  <div id="quizSection">
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span id="progressLabel">0 / 20 완료</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+    </div>
+    <div id="questionsContainer"></div>
+    <div class="submit-wrap">
+      <button class="submit-btn" id="submitBtn" disabled onclick="showResult()">결과 확인하기</button>
+      <div class="submit-hint" id="submitHint">모든 문항에 답해주세요</div>
+    </div>
+  </div>
+  <div class="result-section" id="resultSection">
+    <div class="result-card">
+      <div class="result-emoji" id="resultEmoji"></div>
+      <div class="result-level" id="resultLevel"></div>
+      <div class="result-score" id="resultScore"></div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-bg"><div class="score-bar-fill" id="scoreBarFill"></div></div>
+        <div class="score-labels"><span>양호</span><span>주의</span><span>경고</span><span>위험</span></div>
+      </div>
+      <div class="category-breakdown" id="categoryBreakdown"></div>
+      <div class="result-desc" id="resultDesc"></div>
+      <div id="tipsContainer"></div>
+      <button class="retry-btn" onclick="retry()">다시 테스트하기</button>
+      <div class="disclaimer">⚠️ 본 테스트는 의학적 진단 도구가 아니며, 영상 디자이너의 업무 특성을 반영한 참고용 자가진단입니다. 지속적인 피로감, 우울감, 무기력증이 있다면 전문 상담사나 의료 전문가의 도움을 받으시길 권장합니다.</div>
+    </div>
+  </div>
+</div>
+<script>
+const questions = [
+  { text: "타임라인을 열기만 해도 한숨이 나온다.", cat: "emotional", catLabel: "정서적 소진" },
+  { text: "클라이언트의 피드백 알림이 올 때마다 심장이 철렁한다.", cat: "emotional", catLabel: "정서적 소진" },
+  { text: "\"이 부분만 살짝 수정해주세요\"라는 말에 감정적으로 소모된다.", cat: "emotional", catLabel: "정서적 소진" },
+  { text: "작업물에 대한 애정이 사라지고, 그냥 빨리 끝내고 싶다.", cat: "emotional", catLabel: "정서적 소진" },
+  { text: "예전엔 즐거웠던 영상 작업이 이제는 고역처럼 느껴진다.", cat: "emotional", catLabel: "정서적 소진" },
+  { text: "장시간 모니터 작업으로 눈이 항상 피로하고 건조하다.", cat: "physical", catLabel: "신체적 증상" },
+  { text: "목, 어깨, 손목 등에 만성적인 통증이 있다.", cat: "physical", catLabel: "신체적 증상" },
+  { text: "렌더링 기다리며 잠들거나, 수면 패턴이 완전히 무너졌다.", cat: "physical", catLabel: "신체적 증상" },
+  { text: "야근·철야 후에도 충분히 회복되지 않는 느낌이 든다.", cat: "physical", catLabel: "신체적 증상" },
+  { text: "카페인 없이는 하루를 시작할 수 없고, 점점 양이 늘고 있다.", cat: "physical", catLabel: "신체적 증상" },
+  { text: "레퍼런스를 봐도 영감이 떠오르지 않고 머리가 멍하다.", cat: "creative", catLabel: "창작 고갈" },
+  { text: "새로운 스타일이나 기법을 시도할 의욕이 전혀 없다.", cat: "creative", catLabel: "창작 고갈" },
+  { text: "내 포트폴리오를 보면 자괴감이 들거나 초라해 보인다.", cat: "creative", catLabel: "창작 고갈" },
+  { text: "다른 디자이너의 작업물을 보면 비교되며 위축된다.", cat: "creative", catLabel: "창작 고갈" },
+  { text: "예전에는 즐겁게 봤던 영상 콘텐츠도 이제 직업적으로만 분석하게 된다.", cat: "creative", catLabel: "창작 고갈" },
+  { text: "촉박한 납기, 무한 수정 요청에 지쳐있다.", cat: "work", catLabel: "업무 스트레스" },
+  { text: "\"감성적으로\", \"임팩트 있게\" 같은 모호한 피드백에 지쳤다.", cat: "work", catLabel: "업무 스트레스" },
+  { text: "내 작업의 가치가 제대로 인정받지 못한다고 느낀다.", cat: "work", catLabel: "업무 스트레스" },
+  { text: "실력이 제자리이거나 오히려 퇴보한 것 같다.", cat: "efficacy", catLabel: "효능감 저하" },
+  { text: "이 일을 계속해야 하는지 심각하게 고민한 적이 있다.", cat: "efficacy", catLabel: "효능감 저하" }
+];
+
+const optionLabels = ["전혀 그렇지 않다", "가끔 그렇다", "자주 그렇다", "거의 항상 그렇다"];
+const answers = new Array(questions.length).fill(-1);
+const catNames = { emotional: "정서적 소진", physical: "신체적 증상", creative: "창작 고갈", work: "업무 스트레스", efficacy: "효능감 저하" };
+const catColors = { emotional: "#e74c3c", physical: "#f39c12", creative: "#a855f7", work: "#6366f1", efficacy: "#38bdf8" };
+
+function renderQuestions() {
+  const container = document.getElementById('questionsContainer');
+  let html = '';
+  questions.forEach((q, i) => {
+    html += '<div class="question-card" id="qcard-' + i + '">' +
+      '<div class="q-number">Q' + (i + 1) + '</div>' +
+      '<span class="q-category">' + q.catLabel + '</span>' +
+      '<div class="q-text">' + q.text + '</div>' +
+      '<div class="options">' +
+      optionLabels.map((label, v) =>
+        '<div class="option-btn" onclick="selectOption(' + i + ',' + v + ',this)" id="opt-' + i + '-' + v + '">' +
+        '<div class="dot"></div><span>' + label + '</span></div>'
+      ).join('') +
+      '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function selectOption(qIdx, value, el) {
+  answers[qIdx] = value;
+  var card = document.getElementById('qcard-' + qIdx);
+  card.classList.add('answered');
+  card.querySelectorAll('.option-btn').forEach(function(btn) { btn.classList.remove('selected'); });
+  el.classList.add('selected');
+  updateProgress();
+
+  // Auto-scroll to next unanswered question after a short delay
+  setTimeout(function() {
+    var nextIdx = -1;
+    // Search forward from current question
+    for (var i = qIdx + 1; i < questions.length; i++) {
+      if (answers[i] < 0) { nextIdx = i; break; }
+    }
+    // If not found, wrap around and search from beginning
+    if (nextIdx === -1) {
+      for (var i = 0; i < qIdx; i++) {
+        if (answers[i] < 0) { nextIdx = i; break; }
+      }
+    }
+
+    if (nextIdx !== -1) {
+      var nextCard = document.getElementById('qcard-' + nextIdx);
+      var progressH = document.querySelector('.progress-wrap').offsetHeight;
+      var cardTop = nextCard.getBoundingClientRect().top + window.scrollY - progressH - 20;
+      window.scrollTo({ top: cardTop, behavior: 'smooth' });
+      // Highlight effect
+      nextCard.classList.add('highlight');
+      setTimeout(function() { nextCard.classList.remove('highlight'); }, 1200);
+    } else {
+      // All answered - scroll to submit button
+      var submitWrap = document.querySelector('.submit-wrap');
+      var targetTop = submitWrap.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2 + 40;
+      window.scrollTo({ top: targetTop, behavior: 'smooth' });
+    }
+  }, 350);
+}
+
+function updateProgress() {
+  var answered = answers.filter(function(a) { return a >= 0; }).length;
+  var total = questions.length;
+  var pct = Math.round((answered / total) * 100);
+  document.getElementById('progressLabel').textContent = answered + ' / ' + total + ' 완료';
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+  var btn = document.getElementById('submitBtn');
+  var hint = document.getElementById('submitHint');
+  if (answered === total) {
+    btn.disabled = false;
+    hint.textContent = '준비 완료!';
+    hint.style.color = '#a78bfa';
+  } else {
+    btn.disabled = true;
+    hint.textContent = (total - answered) + '문항 남음';
+    hint.style.color = '#777';
+  }
+}
+
+function showResult() {
+  var totalScore = answers.reduce(function(s, v) { return s + v; }, 0);
+  var maxScore = questions.length * 3;
+  var pct = Math.round((totalScore / maxScore) * 100);
+
+  var cats = {};
+  questions.forEach(function(q, i) {
+    if (!cats[q.cat]) cats[q.cat] = { sum: 0, count: 0 };
+    cats[q.cat].sum += answers[i];
+    cats[q.cat].count++;
+  });
+
+  var level, emoji, color, desc, tips;
+
+  if (pct <= 25) {
+    emoji = '🌿'; level = '양호 — 아직 불꽃이 살아있어요'; color = '#2ecc71';
+    desc = '영상 작업에 대한 열정과 에너지가 건강하게 유지되고 있습니다. 창작에 대한 즐거움을 느끼고 있고, 신체적·정서적 컨디션도 양호한 편이에요. 이 상태를 오래 유지하는 것이 중요합니다.';
+    tips = [
+      { icon: '🎨', text: '개인 프로젝트나 실험적 작업을 꾸준히 해보세요. 상업 작업과 다른 창작의 즐거움이 번아웃을 예방합니다.' },
+      { icon: '👀', text: '영상 외 다른 장르(사진, 음악, 전시)에서도 영감을 받아보세요. 다양한 자극이 창작 근육을 키워줍니다.' },
+      { icon: '🤝', text: '영상 디자이너 커뮤니티에서 교류하며 서로의 작업을 피드백하는 관계를 유지하세요.' }
+    ];
+  } else if (pct <= 50) {
+    emoji = '⚡'; level = '주의 — 렌더링 대기 중인 마음'; color = '#f39c12';
+    desc = '번아웃의 초기 신호가 감지됩니다. 반복되는 수정 작업과 촉박한 납기에 서서히 지치고 있을 수 있어요. 아직 심각한 수준은 아니지만, 지금부터 의식적으로 쉬어가지 않으면 창작 에너지가 고갈될 수 있습니다.';
+    tips = [
+      { icon: '⏸️', text: '하루 중 "모니터 없는 시간"을 30분 이상 확보하세요. 눈과 뇌 모두 디지털 디톡스가 필요합니다.' },
+      { icon: '📐', text: '작업 프로세스를 점검하세요. 템플릿, 프리셋, 스크립트 자동화로 반복 작업을 줄일 수 있습니다.' },
+      { icon: '🗓️', text: '클라이언트에게 수정 횟수와 납기에 대한 경계를 명확히 설정해보세요.' },
+      { icon: '🎬', text: '좋아하는 영화나 뮤직비디오를 "분석 모드" 없이 순수하게 즐겨보세요.' }
+    ];
+  } else if (pct <= 75) {
+    emoji = '🔶'; level = '경고 — 타임라인이 멈춘 상태'; color = '#e67e22';
+    desc = '상당한 수준의 번아웃을 경험하고 있습니다. 창작 의욕이 바닥나고, 모호한 피드백과 끝없는 수정 요청에 정서적으로 소진된 상태일 수 있어요. 신체적 증상까지 동반되고 있다면 적극적인 변화가 필요한 시점입니다.';
+    tips = [
+      { icon: '💬', text: '같은 업계 동료에게 현재 상태를 솔직히 이야기해보세요. 공감만으로도 큰 위안이 됩니다.' },
+      { icon: '🏖️', text: '가능하다면 며칠간 작업을 완전히 내려놓는 시간을 가지세요. 억지로 만든 결과물은 퀄리티도 떨어집니다.' },
+      { icon: '🖥️', text: '작업 환경을 점검하세요. 모니터 높이, 의자, 조명 — 작은 개선이 신체 피로를 줄여줍니다.' },
+      { icon: '🧠', text: '전문 심리 상담을 고려해보세요. 크리에이터의 번아웃을 이해하는 상담사가 늘고 있습니다.' },
+      { icon: '📋', text: '현재 진행 중인 프로젝트를 정리하고, 가능하면 일부를 위임하거나 일정을 조정하세요.' }
+    ];
+  } else {
+    emoji = '🚨'; level = '위험 — 강제 종료가 필요한 상태'; color = '#e74c3c';
+    desc = '심각한 번아웃 상태입니다. 창작 고갈, 정서적 소진, 신체적 피로가 복합적으로 나타나고 있으며, 영상 작업뿐 아니라 일상생활에도 큰 영향을 미치고 있을 가능성이 높습니다. 프로젝트보다 당신의 건강이 먼저입니다.';
+    tips = [
+      { icon: '🆘', text: '전문 상담사 또는 정신건강의학과 상담을 강력히 권장합니다. 지금의 상태는 혼자 해결하기 어렵습니다.' },
+      { icon: '🛑', text: '가능한 범위에서 작업량을 즉시 줄이세요. 건강을 잃으면 어떤 포트폴리오도 의미가 없습니다.' },
+      { icon: '📱', text: '정신건강 위기상담전화 1577-0199, 자살예방상담전화 1393을 기억해주세요.' },
+      { icon: '❤️', text: '자신을 자책하지 마세요. 번아웃은 열정이 있었다는 증거이지, 나약함의 증거가 아닙니다.' },
+      { icon: '🔄', text: '커리어 방향을 재점검해보는 것도 좋습니다. 잠시 쉬어가는 것은 포기가 아니라 전략입니다.' }
+    ];
+  }
+
+  document.getElementById('quizSection').style.display = 'none';
+  var resultSection = document.getElementById('resultSection');
+  resultSection.style.display = 'block';
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultLevel').style.color = color;
+  document.getElementById('resultLevel').textContent = level;
+  document.getElementById('resultScore').textContent = '총점 ' + totalScore + '점 / ' + maxScore + '점 (상위 ' + (100 - pct) + '%)';
+
+  var scoreBar = document.getElementById('scoreBarFill');
+  scoreBar.style.background = 'linear-gradient(90deg, #2ecc71, ' + color + ')';
+  setTimeout(function() { scoreBar.style.width = pct + '%'; }, 100);
+
+  var catHtml = '';
+  var catOrder = ['emotional', 'physical', 'creative', 'work', 'efficacy'];
+  catOrder.forEach(function(key) {
+    if (cats[key]) {
+      var catPct = Math.round((cats[key].sum / (cats[key].count * 3)) * 100);
+      catHtml += '<div class="cat-row"><div class="cat-label">' + catNames[key] + '</div>' +
+        '<div class="cat-bar-bg"><div class="cat-bar-fill" style="width:' + catPct + '%;background:' + catColors[key] + ';"></div></div>' +
+        '<div class="cat-val">' + catPct + '%</div></div>';
+    }
+  });
+  document.getElementById('categoryBreakdown').innerHTML = catHtml;
+
+  var descEl = document.getElementById('resultDesc');
+  descEl.style.borderLeftColor = color;
+  descEl.textContent = desc;
+
+  var tipsHtml = '<div class="tips-title">💡 영상 디자이너를 위한 회복 제안</div>';
+  tips.forEach(function(t) {
+    tipsHtml += '<div class="tip-item"><div class="tip-icon">' + t.icon + '</div><div>' + t.text + '</div></div>';
+  });
+  document.getElementById('tipsContainer').innerHTML = tipsHtml;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function retry() {
+  answers.fill(-1);
+  document.getElementById('resultSection').style.display = 'none';
+  document.getElementById('quizSection').style.display = 'block';
+  renderQuestions();
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+renderQuestions();
+</script>
+</body>
+</html>
