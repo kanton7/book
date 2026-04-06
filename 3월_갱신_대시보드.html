@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026년 3월 갱신 현황 대시보드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', -apple-system, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+  .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 28px 40px; }
+  .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 14px; opacity: 0.75; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+  .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .card-label { font-size: 13px; color: #6b7280; font-weight: 500; margin-bottom: 8px; }
+  .card-value { font-size: 36px; font-weight: 700; }
+  .card-sub { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+  .card.total .card-value { color: #1a1a2e; }
+  .card.renewed .card-value { color: #059669; }
+  .card.not-renewed .card-value { color: #dc2626; }
+  .card.rate .card-value { color: #2563eb; }
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .chart-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .chart-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #1a1a2e; }
+  .section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 28px; }
+  .section h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: #f8fafc; padding: 12px 16px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+  td { padding: 10px 16px; border-bottom: 1px solid #f3f4f6; }
+  tr:hover td { background: #f8fafc; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .rate-bar { display: inline-block; height: 8px; border-radius: 4px; background: #e5e7eb; width: 80px; position: relative; vertical-align: middle; margin-left: 8px; }
+  .rate-bar-fill { height: 100%; border-radius: 4px; background: #059669; }
+  .lists-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .list-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); max-height: 700px; overflow-y: auto; }
+  .list-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; position: sticky; top: 0; background: white; padding-bottom: 12px; z-index: 1; }
+  .list-card .count { font-size: 13px; color: #6b7280; margin-bottom: 12px; }
+  .customer-item { padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; border: 1px solid #f3f4f6; }
+  .customer-item:hover { background: #f8fafc; }
+  .customer-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .customer-detail { font-size: 12px; color: #6b7280; }
+  .customer-remark { font-size: 11px; color: #9ca3af; margin-top: 4px; font-style: italic; padding: 4px 8px; background: #f9fafb; border-radius: 4px; border-left: 3px solid #d1d5db; }
+  .product-tag { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 11px; margin-right: 4px; margin-top: 2px; }
+  .product-tag.zbrush { background: #fef3c7; color: #92400e; }
+  .product-tag.redgiant { background: #fce7f3; color: #9d174d; }
+  .product-tag.redshift { background: #ede9fe; color: #5b21b6; }
+  .product-tag.c4d { background: #e0f2fe; color: #075985; }
+  .product-tag.maxon { background: #d1fae5; color: #065f46; }
+  .product-tag.other { background: #f3f4f6; color: #374151; }
+  .status-tag { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 6px; }
+  .status-tag.done { background: #d1fae5; color: #065f46; }
+  .status-tag.lost { background: #fee2e2; color: #991b1b; }
+  .status-tag.pending { background: #fef3c7; color: #92400e; }
+  .status-tag.contact { background: #dbeafe; color: #1e40af; }
+  .status-tag.nocontract { background: #f3f4f6; color: #6b7280; }
+  .dealer-tag { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; margin-left: 4px; background: #fdf4ff; color: #86198f; }
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid #d1d5db; background: white; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+  .filter-btn:hover { background: #f3f4f6; }
+  .filter-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+  .search-box { padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; width: 220px; }
+  .search-box:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .dealer-bar { height: 20px; border-radius: 4px; display: flex; overflow: hidden; }
+  .dealer-bar-r { background: #059669; height: 100%; }
+  .dealer-bar-n { background: #dc2626; height: 100%; }
+  @media (max-width: 900px) {
+    .summary-cards { grid-template-columns: repeat(2, 1fr); }
+    .charts-row, .lists-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>2026년 3월 갱신 현황 대시보드</h1>
+  <p>재고대장 + DCC 영업 업무일지 + 대리점 현황 통합 | 종료연도 2026 &middot; 종료월 03 | 생성일: 2026.04.06</p>
+</div>
+<div class="container">
+  <div class="summary-cards">
+    <div class="card total"><div class="card-label">전체 갱신 대상</div><div class="card-value">195</div><div class="card-sub">건 (갱신대상 시트 기준)</div></div>
+    <div class="card renewed"><div class="card-label">갱신 완료</div><div class="card-value">87</div><div class="card-sub">건</div></div>
+    <div class="card not-renewed"><div class="card-label">미갱신</div><div class="card-value">108</div><div class="card-sub">건</div></div>
+    <div class="card rate"><div class="card-label">갱신율</div><div class="card-value">44.6%</div><div class="card-sub">갱신 고객 62사 / 미갱신 고객 89사</div></div>
+  </div>
+
+  <!-- Sales Status Cards from Sheet 2 -->
+  <div class="section">
+    <h3>영업일지 기준 계약 현황 <span style="font-size:12px;color:#6b7280;font-weight:400;">(DCC 업무일지 67건)</span></h3>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:120px;text-align:center;padding:16px;background:#d1fae5;border-radius:8px;"><div style="font-size:28px;font-weight:700;color:#065f46;">34</div><div style="font-size:12px;color:#065f46;">계약완료</div></div>
+      <div style="flex:1;min-width:120px;text-align:center;padding:16px;background:#fef3c7;border-radius:8px;"><div style="font-size:28px;font-weight:700;color:#92400e;">6</div><div style="font-size:12px;color:#92400e;">협의중</div></div>
+      <div style="flex:1;min-width:120px;text-align:center;padding:16px;background:#dbeafe;border-radius:8px;"><div style="font-size:28px;font-weight:700;color:#1e40af;">9</div><div style="font-size:12px;color:#1e40af;">타스온 접촉 필요</div></div>
+      <div style="flex:1;min-width:120px;text-align:center;padding:16px;background:#f3f4f6;border-radius:8px;"><div style="font-size:28px;font-weight:700;color:#6b7280;">7</div><div style="font-size:12px;color:#6b7280;">계약미체결</div></div>
+      <div style="flex:1;min-width:120px;text-align:center;padding:16px;background:#fee2e2;border-radius:8px;"><div style="font-size:28px;font-weight:700;color:#991b1b;">3</div><div style="font-size:12px;color:#991b1b;">고객이탈</div></div>
+      <div style="flex:1;min-width:120px;text-align:center;padding:16px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;"><div style="font-size:28px;font-weight:700;color:#9ca3af;">8</div><div style="font-size:12px;color:#9ca3af;">미확인</div></div>
+    </div>
+  </div>
+
+  <!-- Channel Summary -->
+  <div class="section">
+    <h3>판매 채널별 현황 <span style="font-size:12px;color:#6b7280;font-weight:400;">(대리점 vs 직접거래)</span></h3>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;">
+      <div style="flex:1;min-width:200px;padding:20px;border:2px solid #e5e7eb;border-radius:12px;text-align:center;">
+        <div style="font-size:13px;color:#6b7280;margin-bottom:6px;">대리점 경유</div>
+        <div style="font-size:32px;font-weight:700;color:#7c3aed;">129</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:4px;">갱신 62 / 미갱신 67 (48%)</div>
+      </div>
+      <div style="flex:1;min-width:200px;padding:20px;border:2px solid #e5e7eb;border-radius:12px;text-align:center;">
+        <div style="font-size:13px;color:#6b7280;margin-bottom:6px;">직접거래</div>
+        <div style="font-size:32px;font-weight:700;color:#0891b2;">66</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:4px;">갱신 25 / 미갱신 41 (38%)</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div><canvas id="channelPie" height="200"></canvas></div>
+      <div><canvas id="channelBar" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card"><h3>갱신 vs 미갱신 비율</h3><canvas id="pieChart" height="260"></canvas></div>
+    <div class="chart-card"><h3>제품별 갱신 현황 비교</h3><canvas id="barChart" height="260"></canvas></div>
+  </div>
+
+  <!-- Dealer Table -->
+  <div class="section">
+    <h3>대리점별 갱신 현황 <span style="font-size:12px;color:#6b7280;font-weight:400;">(36개 대리점 + 직접거래)</span></h3>
+    <table>
+      <thead><tr><th>대리점명</th><th>갱신</th><th>미갱신</th><th>합계</th><th>갱신율</th><th>시각화</th></tr></thead>
+      <tbody id="dealerTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>제품별 상세 현황</h3>
+    <table><thead><tr><th>제품</th><th>갱신</th><th>미갱신</th><th>합계</th><th>갱신율</th></tr></thead><tbody id="productTableBody"></tbody></table>
+  </div>
+  <div style="margin-bottom:16px;">
+    <div class="filter-bar">
+      <input type="text" class="search-box" id="searchInput" placeholder="고객명 또는 대리점명 검색...">
+      <button class="filter-btn active" onclick="filterProduct('all',this)">전체</button>
+      <button class="filter-btn" onclick="filterProduct('ZBrush',this)">ZBrush</button>
+      <button class="filter-btn" onclick="filterProduct('Maxon One',this)">Maxon One</button>
+      <button class="filter-btn" onclick="filterProduct('Red Giant',this)">Red Giant</button>
+      <button class="filter-btn" onclick="filterProduct('Cinema 4D',this)">Cinema 4D</button>
+      <button class="filter-btn" onclick="filterProduct('Redshift',this)">Redshift</button>
+      <span style="color:#9ca3af;font-size:12px;margin-left:8px;">|</span>
+      <button class="filter-btn" onclick="filterStatus('all',this)">전체 상태</button>
+      <button class="filter-btn" onclick="filterStatus('계약완료',this)">계약완료</button>
+      <button class="filter-btn" onclick="filterStatus('협의중',this)">협의중</button>
+      <button class="filter-btn" onclick="filterStatus('타스온 접촉 필요',this)">타스온</button>
+      <button class="filter-btn" onclick="filterStatus('계약미체결',this)">미체결</button>
+      <button class="filter-btn" onclick="filterStatus('고객이탈',this)">이탈</button>
+      <span style="color:#9ca3af;font-size:12px;margin-left:8px;">|</span>
+      <button class="filter-btn" onclick="filterChannel('all',this)">전체 채널</button>
+      <button class="filter-btn" onclick="filterChannel('dealer',this)">대리점</button>
+      <button class="filter-btn" onclick="filterChannel('direct',this)">직접</button>
+    </div>
+  </div>
+  <div class="lists-row">
+    <div class="list-card"><h3 style="color:#059669;">갱신 완료 고객</h3><div class="count" id="renewedListCount"></div><div id="renewedList"></div></div>
+    <div class="list-card"><h3 style="color:#dc2626;">미갱신 고객</h3><div class="count" id="notRenewedListCount"></div><div id="notRenewedList"></div></div>
+  </div>
+</div>
+<script>
+const renewedData = [{"c": "데브시스터즈", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.11)", "ak": "", "al": "", "dn": "주식회사 루시소프트"}, {"c": "에이치씨스튜디오", "p": "ZBrush", "cp": 8, "e": "갱신(26.02.23) 8카피", "ak": "계약완료", "al": "부재중 / 갱신 고객", "dn": ""}, {"c": "라이온하트스튜디오", "p": "ZBrush", "cp": 84, "e": "갱신(26.02.25) 84카피", "ak": "", "al": "", "dn": "㈜큐브렉스"}, {"c": "라이온하트스튜디오", "p": "ZBrush", "cp": 1, "e": "갱신(26.02.25) 1카피", "ak": "", "al": "", "dn": "㈜큐브렉스"}, {"c": "라이온하트스튜디오", "p": "ZBrush", "cp": 3, "e": "갱신(26.02.25) 3카피", "ak": "", "al": "", "dn": "㈜큐브렉스"}, {"c": "한미사이언스 주식회사", "p": "Maxon One", "cp": 4, "e": "갱신(26.03.05) 4카피", "ak": "계약완료", "al": "", "dn": "(주)단군소프트"}, {"c": "(주)경방", "p": "Maxon One", "cp": 1, "e": "갱신(26.02.25) 1카피", "ak": "계약완료", "al": "", "dn": ""}, {"c": "동아방송예술대학교", "p": "Maxon One", "cp": 38, "e": "갱신(26.01.30) 38카피", "ak": "", "al": "", "dn": ""}, {"c": "네이버", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.17) 1카피", "ak": "", "al": "", "dn": "주식회사 티디지"}, {"c": "㈜아이코닉스", "p": "Red Giant", "cp": 2, "e": "갱신(26.02.23) 2카피", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "㈜아이코닉스", "p": "Red Giant", "cp": 2, "e": "갱신(26.02.23) 2카피", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "㈜아이코닉스", "p": "Redshift", "cp": 1, "e": "갱신(26.02.23) 1카피", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "만시간", "p": "Maxon One", "cp": 2, "e": "갱신(26.03.05) 2카피", "ak": "계약완료", "al": "", "dn": ""}, {"c": "오산대학교", "p": "Maxon One", "cp": 41, "e": "갱신(26.02.27) 41카피", "ak": "계약완료", "al": "", "dn": "㈜소프트피아"}, {"c": "㈜아이코닉스", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.02.23) 1카피", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "이씨아이㈜", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.04) 1카피", "ak": "", "al": "", "dn": "(주)좋은정보시스템"}, {"c": "계명문화대학교", "p": "Maxon One", "cp": 35, "e": "갱신(26.03.16) 35카피", "ak": "계약완료", "al": "부재중 / 걸자마자 전화를 받을 수 없다는 안내음성 나옴", "dn": ""}, {"c": "데브시스터즈", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.16) 1카피", "ak": "", "al": "", "dn": "주식회사 루시소프트"}, {"c": "브이에이게임즈", "p": "ZBrush", "cp": 2, "e": "갱신(26.03.18) 2카피", "ak": "", "al": "", "dn": "주식회사이십일세기소프트"}, {"c": "아이엠파인", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.13) Co-Term to 2027.02.14", "ak": "", "al": "", "dn": "클라우드넷코리아(주)"}, {"c": "디지털서울문화예술대학교", "p": "Maxon One", "cp": 24, "e": "갱신(26.03.05) 24카피", "ak": "", "al": "", "dn": "주식회사 온플릭스(Onfleeks CO., Ltd.)"}, {"c": "㈜넥슨게임즈", "p": "ZBrush", "cp": 17, "e": "갱신(26.03.12) 17카피", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "넥슨코리아", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.05) 1카피", "ak": "계약완료", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "한성대학교", "p": "Maxon One", "cp": 35, "e": "갱신(26.03.17) 35카피", "ak": "", "al": "", "dn": ""}, {"c": "김성문", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.16)", "ak": "계약완료", "al": "", "dn": ""}, {"c": "김다빈", "p": "Cinema 4D", "cp": 2, "e": "갱신(26.03.09) 2카피", "ak": "계약완료", "al": "맥슨원으로 업그레이드 / 26.03.09 웹샵 구매 완료", "dn": ""}, {"c": "넥슨코리아", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.10) 1카피", "ak": "계약완료", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "(주)투핸즈게임즈", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.19) 1카피", "ak": "계약완료", "al": "", "dn": "주식회사 리더스아이티"}, {"c": "빅게임스튜디오", "p": "ZBrush", "cp": 5, "e": "갱신(26.03.09) 5카피", "ak": "", "al": "", "dn": "주식회사 글루온아이앤에스"}, {"c": "하이브", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.19) 1카피", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "위드어스엔터테인먼트", "p": "Red Giant", "cp": 1, "e": "갱신(2026.03.12) 1카피", "ak": "계약완료", "al": "부재중 / 수신거절 / 부재중", "dn": ""}, {"c": "위드어스엔터테인먼트", "p": "Red Giant", "cp": 1, "e": "갱신(2026.03.12) 1카피", "ak": "계약완료", "al": "부재중 / 수신거절 / 부재중", "dn": ""}, {"c": "㈜넥슨게임즈", "p": "ZBrush", "cp": 2, "e": "갱신(26.03.04) 2카피", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "NEXON Games Co., Ltd.", "p": "ZBrush", "cp": 9, "e": "갱신(26.03.16) 9카피", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "NEXON Games Co., Ltd.", "p": "ZBrush", "cp": 7, "e": "갱신(26.03.05) 7카피", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "은성글로벌", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.06)", "ak": "계약완료", "al": "C4D로 변경 희망", "dn": ""}, {"c": "㈜넥슨게임즈", "p": "ZBrush", "cp": 10, "e": "갱신(26.03.04) 10카피", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "데브시스터즈", "p": "ZBrush", "cp": 1, "e": "갱신(26.03.18) 1카피", "ak": "", "al": "", "dn": "주식회사 루시소프트"}, {"c": "셀리노", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.03.19) 1카피", "ak": "협의중", "al": "통화중 / 견적서 메일 전달 완료 / 부재중", "dn": ""}, {"c": "(주)우리홈쇼핑", "p": "Cinema 4D", "cp": 5, "e": "갱신(26.03.13) 5카피", "ak": "계약완료", "al": "부재중", "dn": "(주)하코그래픽솔루션"}, {"c": "(주)우리홈쇼핑", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.13) 1카피", "ak": "계약완료", "al": "부재중", "dn": "(주)하코그래픽솔루션"}, {"c": "㈜에스에이엠지엔터테인먼트", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.11) 1카피", "ak": "계약완료", "al": "부재중", "dn": "(주)코리안소프트플라자"}, {"c": "주식회사 에이버튼", "p": "ZBrush", "cp": 7, "e": "갱신(26.03.11) 7카피", "ak": "", "al": "", "dn": "주식회사이십일세기소프트"}, {"c": "성민선", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.03.16)", "ak": "계약완료", "al": "견적서 요청하셔서 메일 전달", "dn": ""}, {"c": "㈜넥슨게임즈", "p": "ZBrush", "cp": 4, "e": "갱신(26.03.16) 4카피", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "예원학교", "p": "Maxon One", "cp": 11, "e": "갱신(26.03.23) 11카피", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "강원애니고등학교", "p": "Maxon One", "cp": 31, "e": "갱신(26.03.25) 31카피", "ak": "", "al": "", "dn": "㈜이안소프트"}, {"c": "포스트포나인즈", "p": "Maxon One", "cp": 3, "e": "갱신(26.03.19) 3카피", "ak": "", "al": "", "dn": "오르카시스템 주식회사(ORCA SYSTEM CO., LTD.)"}, {"c": "크리에이티브양조장 주식회사", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.16) 1카피", "ak": "", "al": "", "dn": "주식회사 글루온아이앤에스"}, {"c": "크리에이티브양조장 주식회사", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.16) 1카피", "ak": "", "al": "", "dn": "주식회사 글루온아이앤에스"}, {"c": "씨지엔(온누리선교재단)", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.11) 1카피", "ak": "", "al": "", "dn": ""}, {"c": "주식회사 쏘스뮤직", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.11) 1카피", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "베이그", "p": "Maxon One", "cp": 4, "e": "갱신(26.03.23) 4카피", "ak": "", "al": "", "dn": "주식회사 보성소프트"}, {"c": "주식회사 슈피겐코리아", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.16) 1카피", "ak": "", "al": "", "dn": "(주)선도솔루션"}, {"c": "㈜미디어뱅크포유", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.03.25) 1카피", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "㈜아이코닉스", "p": "Redshift", "cp": 1, "e": "갱신(26.02.23) 1카피", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "㈜넥슨게임즈", "p": "ZBrush", "cp": 2, "e": "갱신(26.03.16) 2카피", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "(주)스튜디오뿌리", "p": "Red Giant", "cp": 4, "e": "갱신(26.03.06) 4카피", "ak": "", "al": "", "dn": "클라우드넷코리아(주)"}, {"c": "(주)스튜디오뿌리", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.06) 1카피", "ak": "", "al": "", "dn": "클라우드넷코리아(주)"}, {"c": "안규태", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.02.20) 1카피", "ak": "계약완료", "al": "", "dn": "(주)미디어빌리지테크"}, {"c": "주식회사 스마일게이트 홀딩스", "p": "ZBrush", "cp": 1, "e": "갱신(26.03.17) 1카피", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "대림대학교", "p": "Maxon One", "cp": 40, "e": "갱신(26.03.19) 40카피", "ak": "", "al": "", "dn": "(주)인피네트"}, {"c": "뉴타입 이미지웍스", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.18) 1카피", "ak": "계약완료", "al": "만료 날짜 이후 연락 주시기로 함", "dn": ""}, {"c": "메가젠임플란트", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.03.05) 1카피", "ak": "계약완료", "al": "", "dn": ""}, {"c": "하이브아이엠", "p": "ZBrush", "cp": 1, "e": "갱신(26.03.20) 1카피", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "콩스튜디오코리아", "p": "ZBrush", "cp": 1, "e": "갱신(26.03.25) 1카피", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "(주)미스틸게임즈", "p": "ZBrush", "cp": 2, "e": "갱신(26.03.10) 2카피", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "사일로랩", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.03.04) 1카피", "ak": "계약완료", "al": "", "dn": "(주)소프트플러스"}, {"c": "리미디어랩", "p": "Redshift", "cp": 2, "e": "갱신(26.03.17) 2카피", "ak": "계약완료", "al": "견적서 메일 전달 완료 (레드쉬프트 2카피만 갱신 예정)", "dn": ""}, {"c": "리미디어랩", "p": "Redshift", "cp": 2, "e": "갱신(26.03.18) 2카피", "ak": "계약완료", "al": "견적서 메일 전달 완료 (레드쉬프트 2카피만 갱신 예정)", "dn": ""}, {"c": "에어패스", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.19) 1카피", "ak": "계약완료", "al": "비쥬얼데이터 통해 갱신", "dn": ""}, {"c": "문형순", "p": "Maxon One", "cp": 1, "e": "갱신(26.02.24) 1카피", "ak": "계약완료", "al": "26.03.30 만료인데 26.03.03 만료라고 되어있음.", "dn": ""}, {"c": "이의진", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.09) 1카피", "ak": "계약완료", "al": "", "dn": ""}, {"c": "주식회사 슈피겐코리아", "p": "Red Giant", "cp": 1, "e": "갱신(26.03.18) 1카피", "ak": "", "al": "", "dn": "(주)선도솔루션"}, {"c": "상화", "p": "Maxon One", "cp": 5, "e": "갱신(26.03.17) 5카피", "ak": "계약완료", "al": "5카피인데 다른 곳에서 구매한 4건 포함 9카피 갱신", "dn": ""}, {"c": "아이아이컴바인드", "p": "ZBrush", "cp": 1, "e": "갱신(26.03.19) 1카피", "ak": "", "al": "", "dn": "주식회사이십일세기소프트"}, {"c": "(주)미스틸게임즈", "p": "ZBrush", "cp": 1, "e": "갱신(26.03.10) 1카피", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "이성민", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.03.23) 1카피", "ak": "", "al": "부재중", "dn": ""}, {"c": "컴투스", "p": "ZBrush", "cp": 1, "e": "갱신(26.03.23) 1카피", "ak": "", "al": "", "dn": "주식회사 한국소프트웨어서비스"}, {"c": "마플코퍼레이션", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.03.06) 1카피", "ak": "", "al": "", "dn": "클라우드넷코리아(주)"}, {"c": "아이엠파인", "p": "Maxon One", "cp": 1, "e": "갱신(26.03.13) Co-Term to 2027.02.14", "ak": "", "al": "", "dn": "클라우드넷코리아(주)"}, {"c": "불교텔레비전 ㈜", "p": "Cinema 4D", "cp": 2, "e": "갱신 - 라이선스 이관 후 갱신 요청", "ak": "", "al": "", "dn": "주식회사 글루온아이앤에스"}, {"c": "(주)삼성전자", "p": "Cinema 4D", "cp": 1, "e": "갱신(26.02.13) 1카피 - Render Node Pack", "ak": "", "al": "", "dn": "주식회사 디지아톰"}, {"c": "(주)삼성전자", "p": "Redshift", "cp": 2, "e": "갱신(26.02.13) 2카피", "ak": "", "al": "", "dn": "주식회사 디지아톰"}, {"c": "넥슨코리아", "p": "Maxon One", "cp": 3, "e": "갱신(26.02.19) 1카피, 갱신(26.02.20) 2카피", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "미디어준(정영은)", "p": "Cinema 4D", "cp": 1, "e": "갱신 - 만료일 25.02.28", "ak": "", "al": "", "dn": ""}, {"c": "미디어준(정영은)", "p": "Cinema 4D", "cp": 1, "e": "갱신 - 만료일 25.02.28", "ak": "", "al": "", "dn": ""}];
+const notRenewedData = [{"c": "쿰스비쥬얼", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "(주)더리모", "p": "Maxon One", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "플드18", "p": "Red Giant", "e": "", "ak": "", "al": "", "dn": "주식회사 엠지에스코리아"}, {"c": "라이징윙스", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "위플아이티"}, {"c": "라이징윙스", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "위플아이티"}, {"c": "매스터픽쳐스", "p": "Redshift", "e": "", "ak": "", "al": "", "dn": "(주)하코그래픽솔루션"}, {"c": "마플코퍼레이션", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "클라우드넷코리아(주)"}, {"c": "홍화성", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "아이아이컴바인드", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "주식회사이십일세기소프트"}, {"c": "김수지", "p": "Cinema 4D", "e": "", "ak": "고객이탈", "al": "부재중 / 부재중 / 부재중 / 직종 변경으로 사용 안함", "dn": ""}, {"c": "남선우", "p": "ZBrush", "e": "", "ak": "", "al": "부재중 / 부재중 / 부재중 / 부재중", "dn": "디씨앤아이티 주식회사"}, {"c": "컨트롤나인", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "주식회사 코레이즈홀딩스"}, {"c": "장은혜", "p": "ZBrush", "e": "", "ak": "타스온 접촉 필요", "al": "부재중 / 수신거절 / 부재중 /부재중", "dn": "디씨앤아이티 주식회사"}, {"c": "박주우", "p": "Red Giant", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "김민성", "p": "Maxon One", "e": "", "ak": "계약완료", "al": "웹샵 메일 전달 완료", "dn": ""}, {"c": "이준수", "p": "ZBrush", "e": "", "ak": "타스온 접촉 필요", "al": "부재중 / 문자발송 / 부재중 / 부재중", "dn": "디씨앤아이티 주식회사"}, {"c": "주식회사 레드징코게임즈", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "VFX픽셀", "p": "Maxon One", "e": "", "ak": "계약미체결", "al": "경영악화로 인해 폐업", "dn": "㈜비주얼엑스퍼트컴퍼니"}, {"c": "이종현", "p": "Sidegrades", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "윤정은", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "김경모", "p": "ZBrush", "e": "", "ak": "타스온 접촉 필요", "al": "부재중 / 부재중 / 부재중", "dn": "디씨앤아이티 주식회사"}, {"c": "삼성전자", "p": "Maxon One", "e": "", "ak": "", "al": "", "dn": "KTDS"}, {"c": "최서윤", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "주식회사 비로보틱스", "p": "Cinema 4D", "e": "", "ak": "계약미체결", "al": "올해 사용 예정이 없다고 하심", "dn": "주식회사이십일세기소프트"}, {"c": "㈜카카오엔터테인먼트", "p": "Redshift", "e": "", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "(주)피플리", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "주식회사이십일세기소프트"}, {"c": "던라이크", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "(주)소프트플러스"}, {"c": "한국광기술원", "p": "Cinema 4D", "e": "", "ak": "계약미체결", "al": "사용할 시에 연락주신다고 하심", "dn": ""}, {"c": "김다빈", "p": "Cinema 4D", "e": "", "ak": "계약완료", "al": "맥슨원으로 업그레이드 / 26.03.09 웹샵 구매 완료", "dn": ""}, {"c": "(주)크래프톤", "p": "ZBrush", "e": "", "ak": "계약완료", "al": "", "dn": ""}, {"c": "주식회사 한일디아이", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "코팬글로벌", "p": "Red Giant", "e": "", "ak": "", "al": "퇴사하셔서 내부 담당자에게 연락 전한다고 하심", "dn": ""}, {"c": "호서대학교", "p": "Maxon One", "e": "", "ak": "", "al": "", "dn": "도원아이엔"}, {"c": "주식회사 넷마루", "p": "Cinema 4D", "e": "", "ak": "계약미체결", "al": "3D 디자이너 퇴사하여 현재 사용 안한다고 함", "dn": ""}, {"c": "정재이", "p": "Maxon One", "e": "Compliance", "ak": "", "al": "", "dn": ""}, {"c": "㈜오프비트", "p": "ZBrush", "e": "Teams 계정 전환 요청", "ak": "", "al": "", "dn": "클라우드넷코리아(주)"}, {"c": "씨제이포디플렉스㈜", "p": "Redshift", "e": "", "ak": "", "al": "", "dn": "주식회사 엠지에스코리아"}, {"c": "윤정은", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "김강은", "p": "Maxon One", "e": "Teams 계정 변경 요청", "ak": "", "al": "", "dn": ""}, {"c": "박정규", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "최성웅", "p": "Red Giant", "e": "", "ak": "타스온 접촉 필요", "al": "끊음 / 끊김", "dn": ""}, {"c": "강수진", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "강원애니고등학교", "p": "Maxon One", "e": "", "ak": "", "al": "", "dn": "㈜이안소프트"}, {"c": "주식회사 무신사", "p": "Maxon One", "e": "Co-Term", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "콩스튜디오코리아", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "(주)크래프톤", "p": "ZBrush", "e": "", "ak": "계약완료", "al": "", "dn": ""}, {"c": "(주)엠에이피프로덕션", "p": "Maxon One", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "정실", "p": "Red Giant", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "LG 생활건강", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "(주)투지스인터랙티브"}, {"c": "게임테일즈", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "(주)소프트플러스"}, {"c": "㈜미디어뱅크포유", "p": "Red Giant", "e": "Teams 계정 전환 필요", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "㈜바론컨설턴트", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "소프트웨어원코리아 (유)"}, {"c": "조예진", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "주식회사 플로바", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "(주)하코그래픽솔루션"}, {"c": "네오플", "p": "Maxon One", "e": "", "ak": "", "al": "", "dn": "제니스앤컴퍼니 주식회사"}, {"c": "넷마블(주)", "p": "Red Giant", "e": "", "ak": "", "al": "", "dn": "(주)투지스인터랙티브"}, {"c": "김서진", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "SK케미칼", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "사랑의교회", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": ""}, {"c": "(주)크래프톤", "p": "Maxon One", "e": "", "ak": "계약완료", "al": "음성사서함 연결", "dn": ""}, {"c": "토브웍스", "p": "Maxon One", "e": "", "ak": "", "al": "", "dn": "(주)소프트플러스"}, {"c": "김소명", "p": "ZBrush", "e": "", "ak": "타스온 접촉 필요", "al": "부재중 / 부재중", "dn": ""}, {"c": "(주)크래프톤", "p": "ZBrush", "e": "", "ak": "계약완료", "al": "", "dn": ""}, {"c": "박소연", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "하이브아이엠", "p": "Maxon One", "e": "3월 14일 발주건인데 누락됨", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "김승룡", "p": "Cinema 4D", "e": "", "ak": "타스온 접촉 필요", "al": "거절 / 부재중", "dn": ""}, {"c": "(주)에스비에스", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "주식회사 디지아톰"}, {"c": "(주)에스비에스", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "주식회사 디지아톰"}, {"c": "㈜크레버스", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "㈜크레버스", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "콩스튜디오코리아", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "엣지랭크", "p": "Red Giant", "e": "", "ak": "협의중", "al": "웹샵구매 예정", "dn": ""}, {"c": "엣지랭크", "p": "Cinema 4D", "e": "", "ak": "협의중", "al": "웹샵구매 예정", "dn": ""}, {"c": "스페이드컴퍼니", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "패스트파이브"}, {"c": "정민", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "㈜코리아테크", "p": "Red Giant", "e": "", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "아이아이컴바인드", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "주식회사이십일세기소프트"}, {"c": "네오플", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "제니스앤컴퍼니 주식회사"}, {"c": "(주)스튜디오에이엠제이", "p": "Maxon One", "e": "", "ak": "협의중", "al": "음성사서함 연결 / 웹샵 메일 전달 완료", "dn": ""}, {"c": "엑스엘게임즈", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "빅클라우드"}, {"c": "김예림", "p": "Redshift", "e": "", "ak": "", "al": "부재중", "dn": ""}, {"c": "컴투스", "p": "ZBrush", "e": "영구형 가격 협의 건", "ak": "", "al": "", "dn": "주식회사 한국소프트웨어서비스"}, {"c": "방서현", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "홍성민", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "방서현", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "디씨앤아이티 주식회사"}, {"c": "신희식", "p": "Maxon One", "e": "강앤파트너스 위약건", "ak": "고객이탈", "al": "작년에 사용했는데, 사용신청을 할 필요가 없어졌다고 하심", "dn": ""}, {"c": "알트나인", "p": "Maxon One", "e": "강앤파트너스 위약건", "ak": "계약미체결", "al": "지브러쉬 영구 버전 있어서 맥슨원 갱신 안함", "dn": ""}, {"c": "이동훈", "p": "Cinema 4D", "e": "", "ak": "", "al": "부재중", "dn": ""}, {"c": "어댑트", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "(주)코리안소프트플라자"}, {"c": "㈜넥슨게임즈", "p": "ZBrush", "e": "", "ak": "", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "장혜성", "p": "Cinema 4D", "e": "", "ak": "", "al": "부재중", "dn": ""}, {"c": "조아영", "p": "Cinema 4D", "e": "", "ak": "", "al": "부재중", "dn": ""}, {"c": "삼성전자", "p": "Maxon One", "e": "", "ak": "", "al": "", "dn": "KTDS"}, {"c": "엔씨소프트", "p": "Maxon One", "e": "", "ak": "계약완료", "al": "", "dn": ""}, {"c": "아이아이컴바인드", "p": "Cinema 4D", "e": "", "ak": "", "al": "", "dn": "주식회사이십일세기소프트"}, {"c": "김재희", "p": "Maxon One", "e": "주말부터 사용 요청", "ak": "고객이탈", "al": "사용하시는 직원 퇴사하셔서 이제는 사용안함", "dn": ""}, {"c": "제임스필름", "p": "Red Giant", "e": "금일 저녁부터 사용원한다고 요청 받음", "ak": "", "al": "부재중", "dn": ""}, {"c": "넥슨코리아", "p": "Red Giant", "e": "", "ak": "계약완료", "al": "", "dn": "주식회사 제니스클라우드"}, {"c": "주식회사 무신사", "p": "Maxon One", "e": "Co-Term", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "레드비쥬얼", "p": "Maxon One", "e": "Teams로 계정 변경 필요", "ak": "계약완료", "al": "회사 내부 인원감축이 있었어서 확인 후 연락주심 / 갱신", "dn": ""}, {"c": "아이엠파인", "p": "Maxon One", "e": "Conversion 건 + Teams 계정 전환 필요", "ak": "", "al": "", "dn": "클라우드넷코리아(주)"}, {"c": "상화", "p": "Maxon One", "e": "Co-Term 건", "ak": "계약완료", "al": "5카피인데 다른 곳에서 구매한 4건 포함 9카피 갱신", "dn": ""}, {"c": "라이징윙스", "p": "ZBrush", "e": "계정 Team 전환해야함", "ak": "", "al": "", "dn": "위플아이티"}, {"c": "에스케이스토아 주식회사", "p": "Red Giant", "e": "", "ak": "", "al": "", "dn": "(주)하코그래픽솔루션"}, {"c": "하이브아이엠", "p": "Maxon One", "e": "강앤파트너스 위약건 compliance 단군소프트통해 발주", "ak": "", "al": "", "dn": "(주)단군소프트"}, {"c": "아이엠파인", "p": "Maxon One", "e": "", "ak": "", "al": "", "dn": "클라우드넷코리아(주)"}, {"c": "동양대학교", "p": "Maxon One", "e": "2월가격표 나간 건으로 금액이 인상전 가격으로 발주가 왔음. 확인 필요", "ak": "", "al": "", "dn": "주식회사 바이탈컴"}, {"c": "상화", "p": "Cinema 4D", "e": "Co-Term 건", "ak": "계약완료", "al": "5카피인데 다른 곳에서 구매한 4건 포함 9카피 갱신", "dn": ""}];
+const productStats = {"Red Giant": {"renewed": 18, "notRenewed": 12}, "ZBrush": {"renewed": 22, "notRenewed": 37}, "Maxon One": {"renewed": 27, "notRenewed": 27}, "Redshift": {"renewed": 5, "notRenewed": 4}, "Cinema 4D": {"renewed": 15, "notRenewed": 27}, "Sidegrades": {"renewed": 0, "notRenewed": 1}};
+const dealerStats = {"직접거래": {"r": 25, "n": 41}, "디씨앤아이티 주식회사": {"r": 1, "n": 15}, "(주)코리안소프트플라자": {"r": 9, "n": 6}, "주식회사 제니스클라우드": {"r": 11, "n": 2}, "(주)단군소프트": {"r": 5, "n": 7}, "클라우드넷코리아(주)": {"r": 5, "n": 4}, "주식회사이십일세기소프트": {"r": 3, "n": 5}, "(주)하코그래픽솔루션": {"r": 2, "n": 3}, "주식회사 글루온아이앤에스": {"r": 4, "n": 0}, "(주)소프트플러스": {"r": 1, "n": 3}, "주식회사 디지아톰": {"r": 2, "n": 2}, "주식회사 루시소프트": {"r": 3, "n": 0}, "㈜큐브렉스": {"r": 3, "n": 0}, "위플아이티": {"r": 0, "n": 3}, "㈜이안소프트": {"r": 1, "n": 1}, "(주)선도솔루션": {"r": 2, "n": 0}, "주식회사 한국소프트웨어서비스": {"r": 1, "n": 1}, "주식회사 엠지에스코리아": {"r": 0, "n": 2}, "KTDS": {"r": 0, "n": 2}, "(주)투지스인터랙티브": {"r": 0, "n": 2}, "제니스앤컴퍼니 주식회사": {"r": 0, "n": 2}, "주식회사 티디지": {"r": 1, "n": 0}, "㈜소프트피아": {"r": 1, "n": 0}, "(주)좋은정보시스템": {"r": 1, "n": 0}, "주식회사 온플릭스(Onfleeks CO., Ltd.)": {"r": 1, "n": 0}, "주식회사 리더스아이티": {"r": 1, "n": 0}, "오르카시스템 주식회사(ORCA SYSTEM CO., LTD.)": {"r": 1, "n": 0}, "주식회사 보성소프트": {"r": 1, "n": 0}, "(주)미디어빌리지테크": {"r": 1, "n": 0}, "(주)인피네트": {"r": 1, "n": 0}, "주식회사 코레이즈홀딩스": {"r": 0, "n": 1}, "㈜비주얼엑스퍼트컴퍼니": {"r": 0, "n": 1}, "도원아이엔": {"r": 0, "n": 1}, "소프트웨어원코리아 (유)": {"r": 0, "n": 1}, "패스트파이브": {"r": 0, "n": 1}, "빅클라우드": {"r": 0, "n": 1}, "주식회사 바이탈컴": {"r": 0, "n": 1}};
+let currentFilter = 'all';
+let currentStatus = 'all';
+let currentChannel = 'all';
+
+new Chart(document.getElementById('channelPie'), {
+  type: 'doughnut',
+  data: { labels: ['대리점 경유 (129건)', '직접거래 (66건)'], datasets: [{ data: [129, 66], backgroundColor: ['#7c3aed', '#0891b2'], borderWidth: 2, borderColor: '#fff' }] },
+  options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { padding: 16, font: { size: 13 } } } } }
+});
+new Chart(document.getElementById('channelBar'), {
+  type: 'bar',
+  data: { labels: ['대리점 경유', '직접거래'], datasets: [
+    { label: '갱신', data: [62, 25], backgroundColor: '#059669', borderRadius: 4 },
+    { label: '미갱신', data: [67, 41], backgroundColor: '#dc2626', borderRadius: 4 }
+  ]},
+  options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom', labels: { padding: 16, font: { size: 13 } } } } }
+});
+new Chart(document.getElementById('pieChart'), {
+  type: 'doughnut',
+  data: { labels: ['갱신 완료 (87건)', '미갱신 (108건)'], datasets: [{ data: [87, 108], backgroundColor: ['#059669', '#dc2626'], borderWidth: 2, borderColor: '#fff' }] },
+  options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { padding: 20, font: { size: 13 } } } } }
+});
+const products = ['ZBrush', 'Maxon One', 'Red Giant', 'Cinema 4D', 'Redshift'];
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: { labels: products, datasets: [
+    { label: '갱신', data: products.map(p => productStats[p] ? productStats[p].renewed : 0), backgroundColor: '#059669', borderRadius: 4 },
+    { label: '미갱신', data: products.map(p => productStats[p] ? productStats[p].notRenewed : 0), backgroundColor: '#dc2626', borderRadius: 4 }
+  ]},
+  options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 5 } } }, plugins: { legend: { position: 'bottom', labels: { padding: 20, font: { size: 13 } } } } }
+});
+
+function renderDealerTable() {
+  const tbody = document.getElementById('dealerTableBody');
+  let html = '';
+  Object.entries(dealerStats).forEach(([name, s]) => {
+    const total = s.r + s.n;
+    const rate = total > 0 ? ((s.r / total) * 100).toFixed(1) : '0.0';
+    const rPct = total > 0 ? (s.r / total * 100) : 0;
+    const isTop = name === '직접거래';
+    const nameStyle = isTop ? 'color:#0891b2;font-weight:700;' : '';
+    html += '<tr><td style="' + nameStyle + '">' + name + '</td><td><span class="badge badge-green">' + s.r + '건</span></td><td><span class="badge badge-red">' + s.n + '건</span></td><td>' + total + '건</td><td>' + rate + '%</td><td><div class="dealer-bar" style="width:' + Math.max(total * 3, 30) + 'px;"><div class="dealer-bar-r" style="width:' + rPct + '%;"></div><div class="dealer-bar-n" style="width:' + (100 - rPct) + '%;"></div></div></td></tr>';
+  });
+  tbody.innerHTML = html;
+}
+function renderProductTable() {
+  const tbody = document.getElementById('productTableBody');
+  const allProducts = ['ZBrush', 'Maxon One', 'Red Giant', 'Cinema 4D', 'Redshift', 'Sidegrades'];
+  let html = '';
+  allProducts.forEach(p => {
+    const s = productStats[p]; if (!s) return;
+    const total = s.renewed + s.notRenewed;
+    const rate = total > 0 ? ((s.renewed / total) * 100).toFixed(1) : '0.0';
+    html += '<tr><td><strong>' + p + '</strong></td><td><span class="badge badge-green">' + s.renewed + '건</span></td><td><span class="badge badge-red">' + s.notRenewed + '건</span></td><td>' + total + '건</td><td>' + rate + '% <span class="rate-bar"><span class="rate-bar-fill" style="width:' + rate + '%"></span></span></td></tr>';
+  });
+  tbody.innerHTML = html;
+}
+function getProductClass(p) {
+  const m = {'ZBrush':'zbrush','Red Giant':'redgiant','Redshift':'redshift','Cinema 4D':'c4d','Maxon One':'maxon'};
+  return m[p] || 'other';
+}
+function getStatusTag(ak) {
+  if (!ak) return '';
+  const m = {'계약완료':'done','고객이탈':'lost','협의중':'pending','타스온 접촉 필요':'contact','계약미체결':'nocontract'};
+  return '<span class="status-tag ' + (m[ak]||'') + '">' + ak + '</span>';
+}
+function getDealerTag(dn) {
+  if (!dn) return '';
+  return '<span class="dealer-tag">' + dn + '</span>';
+}
+function groupByCustomer(list) {
+  const g = {};
+  list.forEach(item => { if (!g[item.c]) g[item.c] = []; g[item.c].push(item); });
+  return g;
+}
+function renderLists() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let fR = renewedData, fN = notRenewedData;
+  if (currentFilter !== 'all') { fR = fR.filter(r => r.p === currentFilter); fN = fN.filter(r => r.p === currentFilter); }
+  if (currentStatus !== 'all') { fR = fR.filter(r => r.ak === currentStatus); fN = fN.filter(r => r.ak === currentStatus); }
+  if (currentChannel === 'dealer') { fR = fR.filter(r => r.dn); fN = fN.filter(r => r.dn); }
+  if (currentChannel === 'direct') { fR = fR.filter(r => !r.dn); fN = fN.filter(r => !r.dn); }
+  if (search) {
+    fR = fR.filter(r => r.c.toLowerCase().includes(search) || (r.dn && r.dn.toLowerCase().includes(search)));
+    fN = fN.filter(r => r.c.toLowerCase().includes(search) || (r.dn && r.dn.toLowerCase().includes(search)));
+  }
+  const rG = groupByCustomer(fR);
+  const sorted = Object.entries(rG).sort((a,b) => {
+    const tA = a[1].reduce((s,i) => s + (i.cp||1), 0);
+    const tB = b[1].reduce((s,i) => s + (i.cp||1), 0);
+    return tB - tA;
+  });
+  let rH = '';
+  sorted.forEach(([cust, items]) => {
+    const total = items.reduce((s,i) => s + (i.cp||1), 0);
+    const tags = items.map(i => '<span class="product-tag ' + getProductClass(i.p) + '">' + i.p + (i.cp > 1 ? ' x' + i.cp : '') + '</span>').join('');
+    const ak = items.find(i => i.ak) ? items.find(i => i.ak).ak : '';
+    const al = items.find(i => i.al) ? items.find(i => i.al).al : '';
+    const dn = items.find(i => i.dn) ? items.find(i => i.dn).dn : '';
+    rH += '<div class="customer-item"><div class="customer-name">' + cust + ' <span style="font-weight:400;font-size:12px;color:#059669;">(총 ' + total + '카피)</span>' + getStatusTag(ak) + getDealerTag(dn) + '</div><div class="customer-detail">' + tags + '</div>' + (al ? '<div class="customer-remark">' + al + '</div>' : '') + '</div>';
+  });
+  document.getElementById('renewedList').innerHTML = rH || '<div style="color:#9ca3af;padding:20px;text-align:center;">검색 결과 없음</div>';
+  document.getElementById('renewedListCount').textContent = Object.keys(rG).length + '개 고객사 / ' + fR.length + '건';
+  const nG = groupByCustomer(fN);
+  const sortedN = Object.entries(nG).sort((a,b) => b[1].length - a[1].length);
+  let nH = '';
+  sortedN.forEach(([cust, items]) => {
+    const tags = items.map(i => '<span class="product-tag ' + getProductClass(i.p) + '">' + i.p + '</span>').join('');
+    const ak = items.find(i => i.ak) ? items.find(i => i.ak).ak : '';
+    const al = items.find(i => i.al) ? items.find(i => i.al).al : '';
+    const note = items.find(i => i.e) ? items.find(i => i.e).e : '';
+    const remarkText = al || note || '';
+    const dn = items.find(i => i.dn) ? items.find(i => i.dn).dn : '';
+    nH += '<div class="customer-item"><div class="customer-name">' + cust + ' <span style="font-weight:400;font-size:12px;color:#dc2626;">(' + items.length + '건)</span>' + getStatusTag(ak) + getDealerTag(dn) + '</div><div class="customer-detail">' + tags + '</div>' + (remarkText ? '<div class="customer-remark">' + remarkText + '</div>' : '') + '</div>';
+  });
+  document.getElementById('notRenewedList').innerHTML = nH || '<div style="color:#9ca3af;padding:20px;text-align:center;">검색 결과 없음</div>';
+  document.getElementById('notRenewedListCount').textContent = Object.keys(nG).length + '개 고객사 / ' + fN.length + '건';
+}
+function filterProduct(p, btn) {
+  currentFilter = p;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    if (['전체','ZBrush','Maxon One','Red Giant','Cinema 4D','Redshift'].includes(b.textContent)) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderLists();
+}
+function filterStatus(s, btn) {
+  currentStatus = s;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    if (['전체 상태','계약완료','협의중','타스온','미체결','이탈'].includes(b.textContent)) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderLists();
+}
+function filterChannel(ch, btn) {
+  currentChannel = ch;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    if (['전체 채널','대리점','직접'].includes(b.textContent)) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderLists();
+}
+document.getElementById('searchInput').addEventListener('input', renderLists);
+renderDealerTable();
+renderProductTable();
+renderLists();
+</script>
+</body>
+</html>
